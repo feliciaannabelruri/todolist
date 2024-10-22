@@ -8,10 +8,18 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Database connection
-$conn = new mysqli("localhost", "root", "", "db_task");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+    $servername = "localhost";   // Typically "localhost", adjust if using a remote DB
+    $username = "u571101154_todowish";  // Your database username
+    $password = "Todowish123";  // Your database password
+    $dbname = "u571101154_todowish";  // Your database name
+
+    // Create connection
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    // Check connection
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
 
 // Fetch user data
 $user_id = $_SESSION['user_id'];
@@ -160,71 +168,74 @@ $result = $stmt->get_result();
                         <button class="btn btn-primary">Search</button>
                     </form>
                     <br>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Task</th>
-                                <th>Status</th>
-                                <th>Category</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        <?php
-                        $filter = $_GET['filter'] ?? 'all';
-                        $search = $_GET['search'] ?? '';
-                        $queryStr = "SELECT task_id, task, status, category FROM task WHERE user_id = ?";
-                        $params = array($user_id);
-                        $types = "i";
+                    <div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Task</th>
+                <th>Status</th>
+                <th class="d-none d-sm-table-cell">Category</th> <!-- Hidden on extra small screens -->
+                <th class="d-none d-sm-table-cell">Action</th> <!-- Hidden on extra small screens -->
+            </tr>
+        </thead>
+        <tbody>
+        <?php
+        $filter = $_GET['filter'] ?? 'all';
+        $search = $_GET['search'] ?? '';
+        $queryStr = "SELECT task_id, task, status, category FROM task WHERE user_id = ?";
+        $params = array($user_id);
+        $types = "i";
 
-                        if ($filter === 'completed') {
-                            $queryStr .= " AND status = 'Done'";
-                        } elseif ($filter === 'incomplete') {
-                            $queryStr .= " AND status != 'Done'";
-                        }
-                        if ($search) {
-                            $queryStr .= " AND task LIKE ?";
-                            $params[] = "%$search%";
-                            $types .= "s";
-                        }
-                        $queryStr .= " ORDER BY task_id ASC";
+        if ($filter === 'completed') {
+            $queryStr .= " AND status = 'Done'";
+        } elseif ($filter === 'incomplete') {
+            $queryStr .= " AND status != 'Done'";
+        }
+        if ($search) {
+            $queryStr .= " AND task LIKE ?";
+            $params[] = "%$search%";
+            $types .= "s";
+        }
+        $queryStr .= " ORDER BY task_id ASC";
 
-                        $stmt = $conn->prepare($queryStr);
-                        $stmt->bind_param($types, ...$params);
-                        $stmt->execute();
-                        $result = $stmt->get_result();
-                        $count = 1;
-                        while($fetch = $result->fetch_assoc()){
-                        ?>
-                        <?php if (isset($_SESSION['notification'])): ?>
-                            <div class="alert alert-success" role="alert">
-                            <?php 
-                            echo $_SESSION['notification'];
-                            unset($_SESSION['notification']); 
-                            ?>
-                            </div>
-                        <?php endif; ?>
-                        <tr>
-                            <td><?php echo $count++?></td>
-                            <td><?php echo htmlspecialchars($fetch['task'])?></td>
-                            <td><?php echo htmlspecialchars($fetch['status'])?></td>
-                            <td><?php echo htmlspecialchars($fetch['category'])?></td>
-                            <td>
-                                <?php
-                                if($fetch['status'] != "Done"){
-                                    echo '<a href="update_task.php?task_id='.$fetch['task_id'].'" class="btn btn-success btn-sm">Complete</a> ';
-                                }
-                                ?>
-                                <a href="delete_query.php?task_id=<?php echo $fetch['task_id']; ?>" class="btn btn-danger btn-sm">Delete</a>
-                            </td>
-                        </tr>
-                        <?php
-                        }
-                        $stmt->close();
-                        ?>
-                        </tbody>
-                    </table>
+        $stmt = $conn->prepare($queryStr);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $count = 1;
+        while($fetch = $result->fetch_assoc()){
+        ?>
+        <?php if (isset($_SESSION['notification'])): ?>
+            <div class="alert alert-success" role="alert">
+            <?php 
+            echo $_SESSION['notification'];
+            unset($_SESSION['notification']); 
+            ?>
+            </div>
+        <?php endif; ?>
+        <tr>
+            <td><?php echo $count++?></td>
+            <td><?php echo htmlspecialchars($fetch['task'])?></td>
+            <td><?php echo htmlspecialchars($fetch['status'])?></td>
+            <td class="d-none d-sm-table-cell"><?php echo htmlspecialchars($fetch['category'])?></td> <!-- Hidden on extra small screens -->
+            <td class="d-none d-sm-table-cell">
+                <?php
+                if($fetch['status'] != "Done"){
+                    echo '<a href="update_task.php?task_id='.$fetch['task_id'].'" class="btn btn-success btn-sm">Complete</a> ';
+                }
+                ?>
+                <a href="delete_query.php?task_id=<?php echo $fetch['task_id']; ?>" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        <?php
+        }
+        $stmt->close();
+        ?>
+        </tbody>
+    </table>
+</div>
+
                 </div>
             </div>
         </div>

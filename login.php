@@ -1,34 +1,60 @@
 <?php
 session_start();
-include('conn.php'); // File koneksi database
+include('conn.php'); // Include your database connection file
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    // Capture username and password from the login form
+    $input_username = $_POST['username'];
+    $input_password = $_POST['password'];
 
-    // Cek pengguna di database
+    // Create connection (use connection from your conn.php instead if already connected)
+    $servername = "localhost";   
+    $username = "u571101154_todowish";  
+    $password = "Todowish123";  
+    $dbname = "u571101154_todowish";  
+
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    // Check for connection errors
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    // Prepare SQL query to fetch the user based on the entered username
     $stmt = $conn->prepare('SELECT * FROM users WHERE username = ? LIMIT 1');
-    $stmt->bind_param('s', $username);
+    $stmt->bind_param('s', $input_username); // Bind the actual input username
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
+    // Check if the user exists
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
-        // Verifikasi password (diasumsikan password di-hash)
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            header('Location: index.php'); // Redirect ke halaman utama
+
+        // Verify the password entered by the user against the hashed password in the database
+        if (password_verify($input_password, $user['password'])) {
+            // Password is correct, start the session
+            $_SESSION['user_id'] = $user['id']; // Store user ID in session
+            header('Location: index.php'); // Redirect to the main page
+            exit(); // Stop further execution
         } else {
+            // Password is incorrect
             echo 'Password salah!';
         }
     } else {
+        // Username not found in the database
         echo 'Pengguna tidak ditemukan!';
     }
+
+    // Close the statement and connection
+    $stmt->close();
+    $conn->close();
 }
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel='stylesheet' href='css/bootstrap.min.css'>
     <title>Login</title>
 </head>

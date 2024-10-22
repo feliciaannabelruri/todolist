@@ -4,7 +4,7 @@ if (!isset($_SESSION['user_id'])) {
     exit('Not logged in');
 }
 
-$conn = new mysqli("localhost", "root", "", "db_task");
+$conn = new mysqli("localhost", "u571101154_todowish", "Todowish123", "u571101154_todowish");
 if ($conn->connect_error) {
     exit('Connection failed: ' . $conn->connect_error);
 }
